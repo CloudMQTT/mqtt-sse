@@ -1,0 +1,57 @@
+doctype 5
+html
+  head
+    title MQTT SSE Example
+    link(rel="stylesheet", href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css")
+    style.
+      body { background: #fafafa; padding: 5px;}
+  body
+    .container.panel.panel-default
+      .col-md-6
+        h3 Pub/Sub
+        if connected
+          form
+            .form-group
+              label Message
+              textarea#input.form-control(rows=3) A message
+            button#publish(type='button', class="btn btn-default") Send
+        else
+          i Not connected, try reloading the page to connect again
+        ul#messages.list-group
+      .col-md-6
+        h3 Info
+        ul.list-group
+          li.list-group-item Connection: 
+            if connected
+              span.label.label-success Connected
+            else
+              span.label.label-warning Not connected
+          li.list-group-item Host: #{config.hostname}
+          li.list-group-item Auth: #{config.auth}
+          li.list-group-item Port: #{config.port}
+          li.list-group-item Topic: #{config.topic}
+    script.
+      var target = document.getElementById("messages");
+      var es = new EventSource('/stream');
+      es.onerror = function(e)  { console.error(e); };
+      es.onopen = function(e) { console.log("Open", e);};
+      es.onmessage = function(e) {
+        console.log("Mesage:", e);
+        var newElement = document.createElement("li");
+        newElement.classList.add("list-group-item");
+        newElement.textContent = e.data;
+        target.appendChild(newElement);
+      };
+      document.getElementById("publish").addEventListener("click", function() {
+        var input = document.getElementById("input");
+        var msg = input.value;
+        if(msg) {
+          input.value = "";
+          fetch("/publish", {
+            headers: {"Content-type": "application/x-www-form-urlencoded"},
+            method: "POST",
+            body: "msg=" + msg
+          });
+        }
+      });
+
